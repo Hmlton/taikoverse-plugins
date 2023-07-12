@@ -20,8 +20,6 @@ const {
 const Container = () => {
   const [disabled, setDisabled] = useState(true);
   const [visible, setVisible] = useState(false);
-  const [subscription, setSubscription] = useState<Subscription>();
-  const [playerChunk, setPlayerChunk] = useState<Coord>();
   const [localDiamonds, setLocalDiamonds] = useState<VoxelCoord[]>([]);
   const [hover, setHover] = useState(false);
 
@@ -34,19 +32,11 @@ const Container = () => {
   }
 
   useEffect(() => {
-    // subscribe to chunk updates
-    if(subscription) subscription.unsubscribe();
-    
-    setSubscription(playerChunk$.subscribe((value) => {
-      if (!playerChunk || value.x != playerChunk.x || value.y != playerChunk.y) {
-        setPlayerChunk(value);
-      }
-    }));
-    
-  }, [playerChunk])
-
-  useEffect(() => {
-    if (!playerChunk) return;
+    // Generate random chunk coordinates
+    const randomChunk = {
+      x: Math.floor(Math.random() * 501) - 250,
+      y: Math.floor(Math.random() * 501) - 250
+    };
 
     // when position changes find diamonds on their chunk
     let diamondCoords = [];
@@ -54,9 +44,9 @@ const Container = () => {
       for (let x = 0; x < 16; x++) {
         for (let z = 0; z < 16; z++) {
           const thisCoord = {
-            x: playerChunk.x * 16 + x,
+            x: randomChunk.x * 16 + x,
             y,
-            z: playerChunk.y * 16 + z
+            z: randomChunk.y * 16 + z
           };
 
           const terrainId = getBlockAtPosition(thisCoord)
@@ -68,7 +58,7 @@ const Container = () => {
     }
     setLocalDiamonds(diamondCoords);
     setDisabled(diamondCoords.length === 0);
-  }, [playerChunk, setLocalDiamonds, setDisabled, getBlockAtPosition]);
+  }, [setLocalDiamonds, setDisabled, getBlockAtPosition]);
 
   function executeDrill() {
     // check if there are no diamonds
